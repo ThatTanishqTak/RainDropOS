@@ -1,2 +1,2 @@
 # RainDropOS
-My own operating system made to prove a point
+My own operating system (WIP, just to prove a point)
