@@ -1,6 +1,6 @@
 # RainDropOS
 
-Greetings, sir. **RainDropOS** is a bespoke Linux environment crafted for gaming alone. The project draws inspiration from SteamOS while maintaining a minimal footprint.
+**RainDropOS** is a bespoke Linux environment crafted for gaming alone. The project draws inspiration from SteamOS while maintaining a minimal footprint.
 
 ## Overview
 - **Arch Linux base**: Step 1 provides a tiny root filesystem assembled via `pacstrap`.
@@ -25,18 +25,6 @@ Greetings, sir. **RainDropOS** is a bespoke Linux environment crafted for gaming
 - `scripts/` – Automation utilities such as `RainDropBaseBuild.sh`.
 - `src/` – C++ sources. Currently includes `RainDropBaseCheck` for validation.
 - `docs/` – Additional documentation like `Step1_BaseDistribution.md`.
-
-## Example Code
-```cpp
-// src/RainDropLauncher/main.cpp
-#include <iostream>
-
-int main() {
-    std::cout << "Welcome to RainDropLauncher." << std::endl;
-    return 0;
-}
-```
-This skeleton demonstrates the style used across RainDropOS components.
 
 ## License
 RainDropOS is released under the MIT License. See [LICENSE](LICENSE) for details.
