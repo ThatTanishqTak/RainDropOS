@@ -1,11 +1,7 @@
+#include <catch2/catch_test_macros.hpp>
 #include "RainDropOS.h"
 
-#include <cassert>
-
-int main()
-{    
-    RainDropOS::Boot();
-    
-    // Add basic assertions or unit tests here
-    return 0;
+TEST_CASE("Basic arithmetic works")
+{
+    REQUIRE(1 + 1 == 2);
 }
