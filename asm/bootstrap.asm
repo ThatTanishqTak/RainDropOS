@@ -1,19 +1,26 @@
-; asm/bootstrap.asm
-bits 16
-org 0x7C00
-global _start
+; Basic Multiboot-compliant bootstrap for RainDropOS
+BITS 32
 
-_start:
-    cli                 ; disable interrupts
-    xor ax, ax
-    mov ds, ax
-    mov es, ax
-    mov ss, ax
-    mov sp, 0x7C00      ; stack grows down from the bootloader location
+section .multiboot
+    align 4
+    dd 0x1BADB002          ; magic
+    dd 0x00                ; flags
+    dd -(0x1BADB002 + 0x00)
 
-    ; Here we could load further sectors or jump directly to C++ code
-    call Boot           ; Boot is our C++17 entry function
-    jmp $               ; hang after Boot returns
+section .bss
+    align 4
+stack_bottom:
+    resb 16384
+stack_top:
 
-times 510 - ($-$$) db 0 ; pad out to 512 bytes
-dw 0xAA55              ; boot signature
+section .text
+    global start
+    extern RainDropOS_Boot
+
+start:
+    mov esp, stack_top
+    call RainDropOS_Boot
+.hang:
+    cli
+    hlt
+    jmp .hang

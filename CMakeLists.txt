@@ -8,6 +8,7 @@ add_library(RainDropOS STATIC
     src/Main.cpp
     src/Kernal/Kernal.cpp
     src/Userland/Userland.cpp
+    src/Console/Console.cpp
 )
 
 target_include_directories(RainDropOS PUBLIC include)

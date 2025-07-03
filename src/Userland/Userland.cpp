@@ -1,4 +1,4 @@
-#include <iostream>
+#include "Console.h"
 
 namespace RainDropOS
 {
@@ -6,7 +6,7 @@ namespace RainDropOS
     {
         void init()
         {
-            std::cout << "Userland initialized." << std::endl;
+            Console::Print("Userland initialized.\n");
         }
     }
 }

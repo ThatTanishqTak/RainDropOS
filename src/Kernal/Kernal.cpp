@@ -1,4 +1,4 @@
-#include <iostream>
+#include "Console.h"
 
 namespace RainDropOS
 {
@@ -6,7 +6,7 @@ namespace RainDropOS
     {
         void init()
         {
-            std::cout << "Kernel initialized." << std::endl;
+            Console::Print("Kernel initialized.\n");
         }
     }
 }

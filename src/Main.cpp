@@ -1,23 +1,21 @@
 #include "RainDropOS.h"
 #include "Kernal.h"
 #include "Userland.h"
+#include "Console.h"
 
-#include <iostream>
+extern "C" void RainDropOS_Boot();
 
 namespace RainDropOS
 {
     void Boot()
     {
-        std::cout << "RainDropOS booting..." << std::endl;
+        Console::Print("RainDropOS booting...\n");
         Kernel::init();
         Userland::init();
     }
 }
 
-int main()
+extern "C" void RainDropOS_Boot()
 {
     RainDropOS::Boot();
-    std::cin.get();
-
-    return 0;
 }
