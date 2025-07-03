@@ -1,10 +1,11 @@
 @echo off
 
-pushd "../"
+pushd ".."
 
-mkdir build
+if not exist build mkdir build
 cd build
 cmake ..
-make
+cmake --build .
 
+popd
 pause
