@@ -6,6 +6,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_library(RainDropOS STATIC
     src/Main.cpp
+    src/Kernal/Kernal.cpp
+    src/Userland/Userland.cpp
 )
 
 target_include_directories(RainDropOS PUBLIC include)
