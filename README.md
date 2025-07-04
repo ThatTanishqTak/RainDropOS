@@ -4,7 +4,7 @@
 
 ## Building the ISO
 
-Run `scripts/build_iso.sh` to assemble the bootloader, build the kernel with C++17,
+Run `scripts/BuildISO.sh` to assemble the bootloader, build the kernel with C++17,
 and create `RainDropOS.iso` using GRUB. The script requires `nasm`, `grub-pc-bin`
 and `xorriso` installed on your system.
 
