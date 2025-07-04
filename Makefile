@@ -27,6 +27,9 @@ kernel: $(OBJECTS)
 	ld $(LDFLAGS) -o $(OS_BUILD_DIR)/kernel.bin $(OBJECTS)
 
 iso: kernel
+	@for tool in grub-mkrescue xorriso; do \
+	command -v $$tool >/dev/null 2>&1 || { echo "Error: $$tool not found" >&2; exit 1; }; \
+	done
 	mkdir -p $(ISO_DIR)/boot/grub
 	cp $(OS_BUILD_DIR)/kernel.bin $(ISO_DIR)/boot/kernel.bin
 	@echo 'set timeout=0' > $(ISO_DIR)/boot/grub/grub.cfg
@@ -35,7 +38,7 @@ iso: kernel
 	@echo '    multiboot /boot/kernel.bin' >> $(ISO_DIR)/boot/grub/grub.cfg
 	@echo '    boot' >> $(ISO_DIR)/boot/grub/grub.cfg
 	@echo '}' >> $(ISO_DIR)/boot/grub/grub.cfg
-	grub-mkrescue -o RainDropOS.iso $(ISO_DIR) > /dev/null 2>&1
+	grub-mkrescue -o RainDropOS.iso $(ISO_DIR)
 	@echo
 	@echo "\u2728 Build complete — ISO image created: RainDropOS.iso"
 
