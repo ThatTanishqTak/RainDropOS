@@ -1,9 +1,9 @@
-# RainDropOS Makefile
+	# RainDropOS Makefile
 
 OS_BUILD_DIR := os_build
 ISO_DIR := iso
 
-CPPFLAGS := -ffreestanding -fno-exceptions -fno-rtti -m32 -std=c++17 -nostdlib -I include
+CPPFLAGS := -ffreestanding -fno-exceptions -fno-rtti -m32 -std=c++17 -nostdlib -I include -Wall -Wextra -Wpedantic
 ASFLAGS := -f elf32
 LDFLAGS := -m elf_i386 -T linker.ld
 
@@ -42,4 +42,10 @@ iso: kernel
 clean:
 	rm -rf $(OS_BUILD_DIR) $(ISO_DIR) RainDropOS.iso
 
-.PHONY: all kernel iso clean
+test: $(OS_BUILD_DIR)/tests
+	$(OS_BUILD_DIR)/tests
+
+$(OS_BUILD_DIR)/tests: test/TestMain.cpp | $(OS_BUILD_DIR)
+	g++ -std=c++17 -Wall -Wextra -Wpedantic -I include $< -o $@
+
+.PHONY: all kernel iso clean test

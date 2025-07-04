@@ -1,17 +1,32 @@
 #include "Console.h"
+#include <stddef.h>
+#include <stdint.h>
 
 namespace RainDropOS
 {
     namespace Console
     {
-        static volatile unsigned short* video = (unsigned short*)0xB8000;
-        static int cursor = 0;
+        constexpr uintptr_t FrameBufferAddress = 0xB8000;
+
+        class FrameBuffer
+        {
+        public:
+            volatile unsigned short* const Data = reinterpret_cast<unsigned short*>(FrameBufferAddress);
+            unsigned int Cursor = 0;
+
+            inline void PutChar(char c)
+            {
+                Data[Cursor++] = (0x07 << 8) | static_cast<unsigned char>(c);
+            }
+        };
+
+        static FrameBuffer FrameBuf;
 
         void Print(const char* str)
         {
             while (*str)
             {
-                video[cursor++] = (0x07 << 8) | *str++;
+                FrameBuf.PutChar(*str++);
             }
         }
     }
