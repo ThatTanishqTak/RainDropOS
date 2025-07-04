@@ -4,7 +4,7 @@ namespace RainDropOS
 {
     namespace Userland
     {
-        void init()
+        void Init()
         {
             Console::Print("Userland initialized.\n");
         }

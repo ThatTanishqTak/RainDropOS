@@ -4,7 +4,7 @@ namespace RainDropOS
 {
     namespace Kernel
     {
-        void init()
+        void Init()
         {
             Console::Print("Kernel initialized.\n");
         }
