@@ -37,7 +37,7 @@ iso: kernel
 	@echo '}' >> $(ISO_DIR)/boot/grub/grub.cfg
 	grub-mkrescue -o RainDropOS.iso $(ISO_DIR) > /dev/null 2>&1
 	@echo
-@echo "\u2728 Build complete — ISO image created: RainDropOS.iso"
+	@echo "\u2728 Build complete — ISO image created: RainDropOS.iso"
 
 clean:
 	rm -rf $(OS_BUILD_DIR) $(ISO_DIR) RainDropOS.iso

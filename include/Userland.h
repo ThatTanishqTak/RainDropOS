@@ -4,6 +4,6 @@ namespace RainDropOS
 {
     namespace Userland
     {
-        void init();
+        void Init();
     }
 }

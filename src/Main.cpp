@@ -1,5 +1,5 @@
 #include "RainDropOS.h"
-#include "Kernal.h"
+#include "Kernel.h"
 #include "Userland.h"
 #include "Console.h"
 
@@ -10,8 +10,8 @@ namespace RainDropOS
     void Boot()
     {
         Console::Print("RainDropOS booting...\n");
-        Kernel::init();
-        Userland::init();
+        Kernel::Init();
+        Userland::Init();
     }
 }
 

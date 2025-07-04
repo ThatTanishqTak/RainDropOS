@@ -4,6 +4,6 @@ namespace RainDropOS
 {
     namespace Kernel
     {
-        void init();
+        void Init();
     }
 }
