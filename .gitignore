@@ -1,1 +1,8 @@
-/.vs
+# Ignore build artifacts
+/build/
+/iso/
+RainDropOS.bin
+RainDropOS.iso
+# Ignore Visual Studio Code settings and Visual Studio
+.vscode/
+/.vs/
