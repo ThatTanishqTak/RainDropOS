@@ -22,5 +22,5 @@ private:
     SDL_Renderer* m_Renderer = nullptr;
     TTF_Font* m_Font = nullptr;
 
-    static constexpr const char* FONT_PATH = "/home/thattanishqtak/.local/share/fonts/JetBrainsMono/JetBrainsMonoNerdFont-Regular.ttf";
+    static constexpr const char* FONT_PATH = "assets/fonts/JetBrainsMonoNerdFont-Regular.ttf";
 };
