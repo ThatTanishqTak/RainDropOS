@@ -1,14 +1,18 @@
-#include <SDL2/SDL.h>
+#include "Application.h"
 #include <iostream>
 
-int main() {
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER) != 0) {
-        std::cerr << "SDL init failed: " << SDL_GetError() << "\n";
+int main()
+{
+    Application Application;
+
+    if (!Application.Initialize())
+    {
+        std::cerr << "Failed to initialize\n";
+        
         return 1;
     }
 
-    std::cout << "RainDrop Shell starting...\n";
+    Application.Run();
 
-    SDL_Quit();
     return 0;
 }
