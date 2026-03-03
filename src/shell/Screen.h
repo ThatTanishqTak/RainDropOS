@@ -3,6 +3,8 @@
 #include "InputManager.h"
 #include "Renderer.h"
 
+#include <memory>
+
 class Screen
 {
 public:
@@ -16,6 +18,10 @@ public:
 
     bool WantsToExit() const { return m_WantsToExit; }
 
+    bool HasPendingPush() const { return m_PendingPush != nullptr; }
+    std::unique_ptr<Screen> TakePendingPush() { return std::move(m_PendingPush); }
+
 protected:
     bool m_WantsToExit = false;
+    std::unique_ptr<Screen> m_PendingPush = nullptr;
 };

@@ -30,6 +30,13 @@ void ScreenStack::Update(Action action)
     auto& top = m_Screens.back();
     top->Update(action);
 
+    if (top->HasPendingPush())
+    {
+        Push(top->TakePendingPush());
+
+        return;
+    }
+
     if (top->WantsToExit())
     {
         Pop();

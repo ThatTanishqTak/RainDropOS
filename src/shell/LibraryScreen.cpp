@@ -1,4 +1,6 @@
 #include "LibraryScreen.h"
+#include "SettingsScreen.h"
+
 #include <nlohmann/json.hpp>
 #include <fstream>
 #include <iostream>
@@ -115,6 +117,10 @@ void LibraryScreen::Update(Action action)
             {
                 m_SelectedIndex -= TILES_PER_ROW;
             }
+            break;
+
+        case Action::Menu:
+            m_PendingPush = std::make_unique<SettingsScreen>();
             break;
 
         case Action::Confirm:
