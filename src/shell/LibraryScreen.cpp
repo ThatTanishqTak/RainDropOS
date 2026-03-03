@@ -1,12 +1,9 @@
 #include "LibraryScreen.h"
 #include "GameDetailScreen.h"
 #include "SettingsScreen.h"
-
 #include <nlohmann/json.hpp>
 #include <fstream>
 #include <iostream>
-
-using json = nlohmann::json;
 
 void LibraryScreen::OnEnter()
 {
@@ -28,7 +25,7 @@ void LibraryScreen::LoadLibrary()
 
     try
     {
-        json data = json::parse(file);
+        nlohmann::json data = nlohmann::json::parse(file);
 
         for (const auto& entry : data["games"])
         {
@@ -40,7 +37,7 @@ void LibraryScreen::LoadLibrary()
 
         std::cout << "Loaded " << m_Games.size() << " games from library.json\n";
     }
-    catch (const json::exception& e)
+    catch (const nlohmann::json::exception& e)
     {
         std::cerr << "Failed to parse library.json: " << e.what() << "\n";
     }
@@ -103,25 +100,36 @@ void LibraryScreen::Render(Renderer& renderer)
     renderer.Clear();
 
     SDL_Color white = { 255, 255, 255, 255 };
-    SDL_Color tile = {  40,  50,  90, 255 };
-    SDL_Color highlight = {  80, 120, 220, 255 };
-    SDL_Color dimmed = { 160, 160, 160, 255 };
-    SDL_Color noGames = { 200,  80,  80, 255 };
-    SDL_Color errorCol = { 220, 100,  80, 255 };
+    SDL_Color dimmed = { 140, 140, 150, 255 };
+    SDL_Color tileBg = { 28, 32, 58, 255 };
+    SDL_Color headerBg = { 18, 20, 40, 255 };
+    SDL_Color hintBg = { 18, 20, 40, 255 };
+    SDL_Color borderColor = { 80, 120, 220, 255 };
+    SDL_Color noGames = { 200, 80, 80, 255 };
+    SDL_Color errorCol = { 220, 100, 80, 255 };
+    SDL_Color accent = { 80, 200, 140, 255 };
 
-    renderer.DrawText("RainDrop", 50, 30, 42, white);
-    renderer.DrawText("MY LIBRARY", 50, 110, 18, dimmed);
+    // Header bar
+    renderer.DrawRect(0, 0, 1920, 90, headerBg);
+    renderer.DrawRect(0, 88, 1920, 2, borderColor);
+    renderer.DrawText("RainDrop", 50, 22, 38, white);
+    renderer.DrawText("MY LIBRARY", 330, 34, 18, dimmed);
+
+    // Hint bar at the bottom
+    renderer.DrawRect(0, 1040, 1920, 40, hintBg);
+    renderer.DrawRect(0, 1040, 1920, 1, borderColor);
+    renderer.DrawText("Enter / A  Open      Tab / Start  Settings      Esc / B  Exit", 50, 1050, 15, dimmed);
 
     if (!m_LastError.empty())
     {
-        renderer.DrawText(m_LastError, 50, 680, 16, errorCol);
+        renderer.DrawText(m_LastError, 50, 1010, 15, errorCol);
     }
 
     if (m_Games.empty())
     {
         renderer.DrawText("No games found. Add entries to library.json", 50, 200, 20, noGames);
         renderer.Present();
-    
+
         return;
     }
 
@@ -135,11 +143,15 @@ void LibraryScreen::Render(Renderer& renderer)
 
         bool isSelected = (i == m_SelectedIndex);
 
-        renderer.DrawRect(x, y, TILE_W, TILE_H, isSelected ? highlight : tile);
+        renderer.DrawRect(x, y, TILE_W, TILE_H, tileBg);
+
+        if (isSelected)
+        {
+            renderer.DrawRectOutline(x, y, TILE_W, TILE_H, 3, borderColor);
+        }
+
         renderer.DrawText(m_Games[i].title, x, y + TILE_H + 6, 16, isSelected ? white : dimmed);
     }
-
-    renderer.DrawText("Tab / Start  Settings      Esc / B  Exit", 50, 660, 16, dimmed);
 
     renderer.Present();
 }

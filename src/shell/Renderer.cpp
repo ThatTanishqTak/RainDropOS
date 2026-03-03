@@ -47,6 +47,21 @@ void Renderer::DrawRect(int x, int y, int w, int h, SDL_Color color)
     SDL_RenderFillRect(m_Renderer, &rect);
 }
 
+void Renderer::DrawRectOutline(int x, int y, int w, int h, int thickness, SDL_Color color)
+{
+    SDL_SetRenderDrawColor(m_Renderer, color.r, color.g, color.b, color.a);
+
+    SDL_Rect top = { x, y, w, thickness };
+    SDL_Rect bottom = { x, y + h - thickness, w, thickness };
+    SDL_Rect left = { x, y, thickness, h };
+    SDL_Rect right = { x + w - thickness, y, thickness, h };
+
+    SDL_RenderFillRect(m_Renderer, &top);
+    SDL_RenderFillRect(m_Renderer, &bottom);
+    SDL_RenderFillRect(m_Renderer, &left);
+    SDL_RenderFillRect(m_Renderer, &right);
+}
+
 void Renderer::DrawText(const std::string& text, int x, int y, int size, SDL_Color color)
 {
     TTF_Font* font = TTF_OpenFont(FONT_PATH, size);

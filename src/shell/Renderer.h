@@ -14,6 +14,7 @@ public:
     void Present();
 
     void DrawRect(int x, int y, int w, int h, SDL_Color color);
+    void DrawRectOutline(int x, int y, int w, int h, int thickness, SDL_Color color);
     void DrawText(const std::string& text, int x, int y, int size, SDL_Color color);
 
     SDL_Renderer* GetSDLRenderer() const { return m_Renderer; }
