@@ -7,6 +7,7 @@
 struct GameEntry
 {
     std::string title;
+    std::string executable;
 };
 
 class LibraryScreen : public Screen
@@ -17,8 +18,13 @@ public:
     void Render(Renderer& renderer) override;
 
 private:
+    void LoadLibrary();
+    void LaunchSelected();
+
+private:
     std::vector<GameEntry> m_Games;
     int m_SelectedIndex = 0;
+    std::string m_LastError;
 
     static constexpr int TILE_W = 200;
     static constexpr int TILE_H = 120;
