@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Screen.h"
+
 #include <vector>
 #include <string>
 
@@ -19,9 +20,7 @@ public:
 
 private:
     void LoadLibrary();
-    void LaunchSelected();
 
-private:
     std::vector<GameEntry> m_Games;
     int m_SelectedIndex = 0;
     std::string m_LastError;

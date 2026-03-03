@@ -1,11 +1,10 @@
 #include "LibraryScreen.h"
+#include "GameDetailScreen.h"
 #include "SettingsScreen.h"
 
 #include <nlohmann/json.hpp>
 #include <fstream>
 #include <iostream>
-#include <unistd.h>
-#include <sys/wait.h>
 
 using json = nlohmann::json;
 
@@ -23,7 +22,7 @@ void LibraryScreen::LoadLibrary()
     if (!file.is_open())
     {
         std::cerr << "Could not open library.json\n";
-        
+
         return;
     }
 
@@ -34,7 +33,7 @@ void LibraryScreen::LoadLibrary()
         for (const auto& entry : data["games"])
         {
             GameEntry game;
-            game.title      = entry["title"].get<std::string>();
+            game.title = entry["title"].get<std::string>();
             game.executable = entry["executable"].get<std::string>();
             m_Games.push_back(game);
         }
@@ -47,53 +46,13 @@ void LibraryScreen::LoadLibrary()
     }
 }
 
-void LibraryScreen::LaunchSelected()
-{
-    if (m_Games.empty()) { return; }
-
-    const GameEntry& game = m_Games[m_SelectedIndex];
-    std::cout << "Launching: " << game.title << " (" << game.executable << ")\n";
-
-    pid_t pid = fork();
-
-    if (pid == 0)
-    {
-        // Child process — replace itself with the game
-        execvp(game.executable.c_str(), nullptr);
-
-        // If we reach here execvp failed
-        std::cerr << "Failed to launch: " << game.executable << "\n";
-        _exit(1);
-    }
-    else if (pid > 0)
-    {
-        // Parent process — wait for game to exit
-        int status;
-        waitpid(pid, &status, 0);
-
-        if (WIFEXITED(status) && WEXITSTATUS(status) != 0)
-        {
-            std::cerr << "Game exited with error code: " << WEXITSTATUS(status) << "\n";
-            m_LastError = "Game failed to launch or exited with an error";
-        }
-        else
-        {
-            m_LastError.clear();
-        }
-
-        std::cout << "Game exited, returning to shell\n";
-    }
-    else
-    {
-        std::cerr << "fork() failed\n";
-        m_LastError = "Failed to start game process";
-    }
-}
-
 void LibraryScreen::Update(Action action)
 {
     int count = static_cast<int>(m_Games.size());
-    if (count == 0) { return; }
+    if (count == 0)
+    {
+        return;
+    }
 
     switch (action)
     {
@@ -119,12 +78,15 @@ void LibraryScreen::Update(Action action)
             }
             break;
 
-        case Action::Menu:
-            m_PendingPush = std::make_unique<SettingsScreen>();
+        case Action::Confirm:
+            if (!m_Games.empty())
+            {
+                m_PendingPush = std::make_unique<GameDetailScreen>(m_Games[m_SelectedIndex]);
+            }
             break;
 
-        case Action::Confirm:
-            LaunchSelected();
+        case Action::Menu:
+            m_PendingPush = std::make_unique<SettingsScreen>();
             break;
 
         case Action::Back:
@@ -159,6 +121,7 @@ void LibraryScreen::Render(Renderer& renderer)
     {
         renderer.DrawText("No games found. Add entries to library.json", 50, 200, 20, noGames);
         renderer.Present();
+    
         return;
     }
 
@@ -175,6 +138,8 @@ void LibraryScreen::Render(Renderer& renderer)
         renderer.DrawRect(x, y, TILE_W, TILE_H, isSelected ? highlight : tile);
         renderer.DrawText(m_Games[i].title, x, y + TILE_H + 6, 16, isSelected ? white : dimmed);
     }
+
+    renderer.DrawText("Tab / Start  Settings      Esc / B  Exit", 50, 660, 16, dimmed);
 
     renderer.Present();
 }

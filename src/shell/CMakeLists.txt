@@ -7,6 +7,7 @@ add_executable(raindrop-shell
     ScreenStack.cpp
     LibraryScreen.cpp
     SettingsScreen.cpp
+    GameDetailScreen.cpp
     Renderer.cpp
 )
 
