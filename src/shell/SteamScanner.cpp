@@ -2,12 +2,30 @@
 #include "VdfParser.h"
 #include <filesystem>
 #include <iostream>
+#include <cstdlib>
 
 std::vector<GameEntry> SteamScanner::Scan()
 {
-    std::vector<GameEntry> games;
+    // Get home directory at runtime
+    const char* home = std::getenv("HOME");
+    if (!home)
+    {
+        std::cerr << "SteamScanner: HOME not set\n";
+    
+        return {};
+    }
 
-    auto libraries = FindLibraryPaths();
+    std::string steamRoot = std::string(home) + "/.steam/steam";
+    std::cout << "SteamScanner: scanning " << steamRoot << "\n";
+
+    return ScanPath(steamRoot);
+}
+
+std::vector<GameEntry> SteamScanner::ScanPath(const std::string& steamRoot)
+{
+    std::vector<GameEntry> games;
+    auto libraries = FindLibraryPaths(steamRoot);
+
     std::cout << "SteamScanner: found " << libraries.size() << " library paths\n";
 
     for (const auto& lib : libraries)
@@ -20,23 +38,18 @@ std::vector<GameEntry> SteamScanner::Scan()
     return games;
 }
 
-std::vector<std::string> SteamScanner::FindLibraryPaths()
+std::vector<std::string> SteamScanner::FindLibraryPaths(const std::string& steamRoot)
 {
     std::vector<std::string> paths;
-    std::string vdfPath = std::string(STEAM_ROOT) + "/config/libraryfolders.vdf";
+    std::string vdfPath = steamRoot + "/config/libraryfolders.vdf";
 
     VdfNode root = VdfParser::ParseFile(vdfPath);
     if (root.children.empty())
     {
-        std::cerr << "SteamScanner: could not parse libraryfolders.vdf\n";
-        // Fall back to default Steam path
-        paths.push_back(STEAM_ROOT);
-
-        return paths;
+        std::cerr << "SteamScanner: could not parse libraryfolders.vdf" << " (Steam may not be installed)\n";
+        return paths; // return empty — no Steam installed
     }
 
-    // libraryfolders.vdf structure:
-    // "libraryfolders" { "0" { "path" "..." } "1" { "path" "..." } }
     const VdfNode& folders = root["libraryfolders"];
     for (const auto& [key, node] : folders.children)
     {
@@ -50,7 +63,7 @@ std::vector<std::string> SteamScanner::FindLibraryPaths()
 
     if (paths.empty())
     {
-        paths.push_back(STEAM_ROOT);
+        paths.push_back(steamRoot);
     }
 
     return paths;
@@ -71,12 +84,11 @@ void SteamScanner::ScanLibrary(const std::string& libraryPath, std::vector<GameE
     {
         const std::string filename = entry.path().filename().string();
 
-        // Look for appmanifest_*.acf files
         if (filename.rfind("appmanifest_", 0) != 0)
         {
             continue;
         }
-        
+
         if (entry.path().extension() != ".acf")
         {
             continue;
@@ -90,7 +102,6 @@ void SteamScanner::ScanLibrary(const std::string& libraryPath, std::vector<GameE
             continue;
         }
 
-        // Only show fully installed games
         std::string stateFlags = appState["StateFlags"].value;
         if (stateFlags.empty())
         {
@@ -104,7 +115,7 @@ void SteamScanner::ScanLibrary(const std::string& libraryPath, std::vector<GameE
         }
 
         std::string appid = appState["appid"].value;
-        std::string name = appState["name"].value;
+        std::string name  = appState["name"].value;
 
         if (appid.empty() || name.empty())
         {
@@ -120,12 +131,4 @@ void SteamScanner::ScanLibrary(const std::string& libraryPath, std::vector<GameE
         out.push_back(game);
         std::cout << "SteamScanner: found " << name << " (appid " << appid << ")\n";
     }
-}
-
-std::vector<GameEntry> SteamScanner::ScanPath(const std::string& steamRoot)
-{
-    std::vector<GameEntry> games;
-    ScanLibrary(steamRoot, games);
-    
-    return games;
 }

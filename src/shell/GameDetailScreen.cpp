@@ -18,6 +18,16 @@ void GameDetailScreen::LaunchGame()
 {
     std::cout << "Launching: " << m_Game.title << "\n";
 
+    if (m_Game.isSteam)
+    {
+        // Launch via Steam URI
+        std::string cmd = "steam steam://rungameid/" + m_Game.appid + " &";
+        system(cmd.c_str());
+        
+        return;
+    }
+
+    // Native launch via fork/exec
     pid_t pid = fork();
 
     if (pid == 0)

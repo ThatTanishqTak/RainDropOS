@@ -1,9 +1,12 @@
 #include "LibraryScreen.h"
 #include "GameDetailScreen.h"
 #include "SettingsScreen.h"
+#include "SteamScanner.h"
+
 #include <nlohmann/json.hpp>
 #include <fstream>
 #include <iostream>
+#include <algorithm>
 
 void LibraryScreen::OnEnter()
 {
@@ -15,32 +18,64 @@ void LibraryScreen::LoadLibrary()
 {
     m_Games.clear();
 
-    std::ifstream file("library.json");
-    if (!file.is_open())
+    // Try current directory first, then home directory
+    std::vector<std::string> searchPaths = { "library.json", std::string(std::getenv("HOME")) + "/raindropos/library.json" };
+    std::ifstream file;
+
+    for (const auto& path : searchPaths)
     {
-        std::cerr << "Could not open library.json\n";
-
-        return;
-    }
-
-    try
-    {
-        nlohmann::json data = nlohmann::json::parse(file);
-
-        for (const auto& entry : data["games"])
+        file.open(path);
+        if (file.is_open())
         {
-            GameEntry game;
-            game.title = entry["title"].get<std::string>();
-            game.executable = entry["executable"].get<std::string>();
-            m_Games.push_back(game);
-        }
+            std::cout << "Loading library from: " << path << "\n";
 
-        std::cout << "Loaded " << m_Games.size() << " games from library.json\n";
+            break;
+        }
     }
-    catch (const nlohmann::json::exception& e)
+
+    if (file.is_open())
     {
-        std::cerr << "Failed to parse library.json: " << e.what() << "\n";
+        try
+        {
+            nlohmann::json data = nlohmann::json::parse(file);
+
+            for (const auto& entry : data["games"])
+            {
+                GameEntry game;
+                game.title = entry["title"].get<std::string>();
+                game.executable = entry["executable"].get<std::string>();
+                game.isSteam = false;
+                
+                m_Games.push_back(game);
+            }
+
+            std::cout << "Loaded " << m_Games.size() << " manual games from library.json\n";
+        }
+        catch (const nlohmann::json::exception& e)
+        {
+            std::cerr << "Failed to parse library.json: " << e.what() << "\n";
+        }
     }
+    else
+    {
+        std::cerr << "Could not find library.json\n";
+    }
+
+    // Scan for Steam games
+    SteamScanner scanner;
+    auto steamGames = scanner.Scan();
+    for (auto& game : steamGames)
+    {
+        m_Games.push_back(game);
+    }
+
+    std::sort(m_Games.begin(), m_Games.end(),
+        [](const GameEntry& a, const GameEntry& b)
+        {
+            return a.title < b.title;
+        });
+
+    std::cout << "Total games in library: " << m_Games.size() << "\n";
 }
 
 void LibraryScreen::Update(Action action)
@@ -101,13 +136,12 @@ void LibraryScreen::Render(Renderer& renderer)
 
     SDL_Color white = { 255, 255, 255, 255 };
     SDL_Color dimmed = { 140, 140, 150, 255 };
-    SDL_Color tileBg = { 28, 32, 58, 255 };
-    SDL_Color headerBg = { 18, 20, 40, 255 };
-    SDL_Color hintBg = { 18, 20, 40, 255 };
-    SDL_Color borderColor = { 80, 120, 220, 255 };
-    SDL_Color noGames = { 200, 80, 80, 255 };
-    SDL_Color errorCol = { 220, 100, 80, 255 };
-    SDL_Color accent = { 80, 200, 140, 255 };
+    SDL_Color tileBg = {  28,  32,  58, 255 };
+    SDL_Color headerBg = {  18,  20,  40, 255 };
+    SDL_Color hintBg = {  18,  20,  40, 255 };
+    SDL_Color borderColor = {  80, 120, 220, 255 };
+    SDL_Color noGames = { 200,  80,  80, 255 };
+    SDL_Color errorCol = { 220, 100,  80, 255 };
 
     // Header bar
     renderer.DrawRect(0, 0, 1920, 90, headerBg);
@@ -115,7 +149,7 @@ void LibraryScreen::Render(Renderer& renderer)
     renderer.DrawText("RainDrop", 50, 22, 38, white);
     renderer.DrawText("MY LIBRARY", 330, 34, 18, dimmed);
 
-    // Hint bar at the bottom
+    // Hint bar
     renderer.DrawRect(0, 1040, 1920, 40, hintBg);
     renderer.DrawRect(0, 1040, 1920, 1, borderColor);
     renderer.DrawText("Enter / A  Open      Tab / Start  Settings      Esc / B  Exit", 50, 1050, 15, dimmed);
@@ -150,7 +184,8 @@ void LibraryScreen::Render(Renderer& renderer)
             renderer.DrawRectOutline(x, y, TILE_W, TILE_H, 3, borderColor);
         }
 
-        renderer.DrawText(m_Games[i].title, x, y + TILE_H + 6, 16, isSelected ? white : dimmed);
+        std::string label = m_Games[i].title + (m_Games[i].isSteam ? " [S]" : "");
+        renderer.DrawText(label, x, y + TILE_H + 6, 16, isSelected ? white : dimmed);
     }
 
     renderer.Present();
