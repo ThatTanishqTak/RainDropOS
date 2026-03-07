@@ -8,3 +8,16 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 include_directories(include)
 
 add_subdirectory(src/shell)
+
+add_executable(vdf-test
+    tests/vdf_test.cpp
+    src/shell/VdfParser.cpp
+)
+target_include_directories(vdf-test PRIVATE src/shell)
+
+add_executable(steam-test
+    tests/steam_test.cpp
+    src/shell/SteamScanner.cpp
+    src/shell/VdfParser.cpp
+)
+target_include_directories(steam-test PRIVATE src/shell)

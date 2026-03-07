@@ -1,0 +1,10 @@
+"AppState"
+{
+    "appid"        "440"
+    "name"         "Team Fortress 2"
+    "StateFlags"   "4"
+    "UserConfig"
+    {
+        "language"  "english"
+    }
+}

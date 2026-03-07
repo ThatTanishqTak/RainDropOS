@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Screen.h"
-#include "LibraryScreen.h"
+#include "GameEntry.h"
 
 enum class DetailAction
 {

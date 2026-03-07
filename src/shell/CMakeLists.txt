@@ -6,9 +6,11 @@ add_executable(raindrop-shell
     InputManager.cpp
     ScreenStack.cpp
     LibraryScreen.cpp
-    SettingsScreen.cpp
     GameDetailScreen.cpp
+    SettingsScreen.cpp
     Renderer.cpp
+    VdfParser.cpp
+    SteamScanner.cpp
 )
 
 target_include_directories(raindrop-shell PRIVATE ${SDL2_INCLUDE_DIRS})

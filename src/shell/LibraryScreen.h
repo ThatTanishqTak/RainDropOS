@@ -1,15 +1,10 @@
 #pragma once
 
 #include "Screen.h"
+#include "GameEntry.h"
 
 #include <vector>
 #include <string>
-
-struct GameEntry
-{
-    std::string title;
-    std::string executable;
-};
 
 class LibraryScreen : public Screen
 {
@@ -21,6 +16,7 @@ public:
 private:
     void LoadLibrary();
 
+private:
     std::vector<GameEntry> m_Games;
     int m_SelectedIndex = 0;
     std::string m_LastError;
