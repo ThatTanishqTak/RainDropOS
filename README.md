@@ -1,86 +1,51 @@
 # RainDropOS
 
-RainDropOS is a custom Linux distribution designed for a **console-style PC gaming experience**. It is **Arch Linux–based** (not a custom kernel) and ships a **controller-first, full-screen shell** written in modern **C++20**.
+A minimal, Arch Linux-based operating system designed for a console-style PC gaming experience. RainDropOS boots directly into a controller-first shell — no desktop environment, no login prompt, just your game library.
 
-The goal: boot straight into a minimal, game-focused UI that launches games reliably, with sensible defaults and performance-minded tuning.
-
----
-
-## What RainDropOS Is
-
-- **Arch-based distro** built with a reproducible ISO pipeline (via `archiso`)
-- **Gaming stack** built around the open ecosystem:
-  - Mesa / Vulkan
-  - Steam + Proton (planned)
-- **Controller-first UI shell** (C++20) that acts like a console home screen — no desktop, no taskbar, just your games
+> **Status:** Active development. Core shell and Steam integration are functional. Performance daemon in progress.
 
 ---
 
-## Current State
+## Overview
 
-The shell is actively being built. Here is what exists and works today:
+RainDropOS replaces the traditional desktop with a full-screen C++20 shell that behaves like a console home screen. On boot, the system autologins and launches directly into the shell. Games are launched from a navigable library, run fullscreen, and return cleanly to the shell on exit.
 
-**Shell (C++20 / SDL2)**
-- Full render loop running at ~60fps
-- Controller and keyboard input abstraction
-- Screen stack with push/pop navigation
-- Game library screen with navigable tile grid
-- Game detail screen (title, cover art placeholder, launch/back options)
-- Settings screen (fullscreen, resolution, vsync, exit)
-- JSON-driven game library (`library.json`) — add games without recompiling
-- Game launcher via `fork`/`execvp`/`waitpid` with clean return to shell
-- Consistent UI: header bar, hint bar, border-based selection across all screens
-- JetBrains Mono Nerd Font
-
-**Infrastructure**
-- CMake + Ninja build system
-- C++20, Clang 18
-- `nlohmann/json` for library parsing
-- Bundled font assets
+Steam libraries are detected automatically. Manual entries can be added via a simple JSON file. A background daemon handles per-game performance profiles and telemetry collection.
 
 ---
 
-## Tech Stack
+## Features
 
-| Component | Technology |
-|---|---|
-| Shell language | C++20 |
-| Windowing / input | SDL2 |
-| Font rendering | SDL2_ttf |
-| JSON parsing | nlohmann/json |
-| Build system | CMake + Ninja |
-| Compiler | Clang 18 |
-| Base OS | Arch Linux |
-| ISO tooling | archiso (planned) |
+**Shell**
+- 60fps render loop with SDL2
+- Controller and keyboard input with a unified action abstraction
+- Screen stack navigation — library, game detail, settings
+- Steam library auto-detection via VDF file parsing
+- JSON-driven manual game library
+- Game launcher via `fork` / `execvp` / `waitpid`
+- Steam game launching via `steam://rungameid/<appid>`
+- Consistent UI — header bar, hint bar, border-based selection
 
----
+**Performance Daemon**
+- Unix socket IPC with the shell
+- Per-game CPU governor profiles
+- Live telemetry — CPU usage, temperature, RAM
+- Automatic profile restore on game exit
 
-## Repository Layout
-
-```
-raindropos/
-├── src/
-│   ├── shell/          # Full-screen shell (C++20)
-│   └── daemons/        # Background services (planned)
-├── iso/                # ArchISO build pipeline (planned)
-├── packages/           # PKGBUILDs for RainDropOS components (planned)
-├── assets/
-│   └── fonts/          # Bundled fonts
-├── include/            # Third-party headers (nlohmann/json)
-├── docs/               # Design notes and documentation
-├── games/              # Optional user content
-└── library.json        # Game library definition
-```
+**System**
+- Boots straight into the shell — no display manager, no desktop
+- Autologin via getty override
+- Tested on Arch Linux in VirtualBox
 
 ---
 
-## Building
+## Getting Started
 
 ### Prerequisites
 
-- Linux (or WSL2 on Windows)
-- `clang++`, `cmake`, `ninja`
-- `libsdl2-dev`, `libsdl2-ttf-dev`
+- Linux or WSL2
+- `clang++` `cmake` `ninja`
+- `libsdl2-dev` `libsdl2-ttf-dev`
 
 ### Build
 
@@ -89,12 +54,29 @@ git clone https://github.com/ThatTanishqTak/raindropos.git
 cd raindropos
 cmake -B build -G Ninja -DCMAKE_CXX_COMPILER=clang++
 cmake --build build
-./build/src/shell/raindrop-shell
 ```
 
-### Adding Games
+### Run
 
-Edit `library.json` in the project root:
+```bash
+# Shell
+./build/src/shell/raindrop-shell
+
+# Daemon (optional, run alongside the shell)
+./build/raindrop-daemon
+
+# Tests
+./build/vdf-test
+./build/steam-test
+```
+
+---
+
+## Configuration
+
+### Game Library
+
+Edit `library.json` in the project root to add games manually. The shell reads this file on every launch — no recompile required.
 
 ```json
 {
@@ -107,7 +89,19 @@ Edit `library.json` in the project root:
 }
 ```
 
-No recompile needed — the shell reads this file on every launch.
+Steam games are detected automatically when Steam is installed and merged into the same library view.
+
+### Performance Profiles
+
+Create a per-game profile at `~/.config/raindrop/profiles/<appid>.json`:
+
+```json
+{
+    "cpu_governor": "performance"
+}
+```
+
+The daemon applies the profile on game launch and restores defaults on exit. If no profile exists for a game, system defaults are used.
 
 ---
 
@@ -116,67 +110,47 @@ No recompile needed — the shell reads this file on every launch.
 | Input | Action |
 |---|---|
 | Arrow Keys / D-Pad | Navigate |
-| Enter / A | Confirm / Open |
+| Enter / A | Confirm |
 | Escape / B | Back |
 | Tab / Start | Settings |
 
 ---
 
-## Roadmap
+## Tech Stack
 
-### ✅ Phase 0 — Infrastructure
-- CMake + Ninja build pipeline
-- C++20 toolchain (Clang 18)
-- SDL2 + SDL2_ttf dependencies
-- Git repository
-
-### ✅ Phase 2 — Shell Prototype
-- Render loop and input abstraction
-- Screen stack navigation
-- Game library with JSON backend
-- Game launcher (fork/exec/wait)
-- Settings screen
-- Visual polish
-
-### ⬜ Phase 1 — Base ISO
-- Reproducible Arch-based ISO (archiso)
-- Auto-launch shell on boot via systemd
-- Boot validation in VirtualBox
-
-### ⬜ Phase 3 — Steam + Proton
-- Detect Steam libraries via VDF parsing
-- Launch titles via Proton
-- Per-game Proton version selection
-
-### ⬜ Phase 4 — Performance Daemon
-- Per-game CPU governor and GPU power profiles
-- Telemetry: FPS, CPU/GPU usage, thermals
-- IPC between shell and daemon via Unix socket
-
-### ⬜ Phase 5 — Installer + Updates
-- Calamares-based installer
-- Custom Arch package repository
-- In-shell update flow
-
-### ⬜ Phase 6 — Polish + Hardware
-- GPU compatibility (AMD, Intel, NVIDIA)
-- On-screen keyboard
-- Animations and theming system
-- Recommended open-source game list
+| Component | Technology |
+|---|---|
+| Shell | C++20 |
+| Windowing / input | SDL2 |
+| Font rendering | SDL2_ttf |
+| JSON | nlohmann/json |
+| IPC | Unix domain sockets |
+| Build | CMake + Ninja |
+| Compiler | Clang 18 |
+| Base OS | Arch Linux |
 
 ---
 
-## Milestones
+## Roadmap
 
-1. **Boot + Shell Demo** — ISO boots, shell auto-launches, game runs and returns cleanly *(in progress)*
-2. **Shell Prototype** — Controller navigation, library, reliable launching ✅
-3. **Steam Integration** — Steam/Proton detected and usable from the shell
-4. **Performance Manager** — Profiles and telemetry in the shell
-5. **Installer + Updates** — Bare-metal install and upgrade path
-6. **Polish + Hardware** — Refined UX and broad compatibility
+| Phase | Description | Status |
+|---|---|---|
+| 0 — Infrastructure | Build pipeline, toolchain, repo | ✅ Done |
+| 1 — Base System | Arch install, autologin, boot to shell | ✅ Done |
+| 2 — Shell | Render loop, input, library, launcher, settings | ✅ Done |
+| 3 — Steam Integration | VDF parsing, library scan, Proton launch | ✅ Done |
+| 4 — Performance Daemon | IPC, profiles, telemetry | 🔄 In progress |
+| 5 — Installer | Calamares installer, package repo, updates | ⬜ Planned |
+| 6 — Polish | GPU support, OSK, animations, hardware testing | ⬜ Planned |
+
+---
+
+## Contributing
+
+This project is in active early development. Contributions, issues, and feedback are welcome. Please open an issue before submitting a large pull request.
 
 ---
 
 ## License
 
-RainDropOS is released under the **Apache License 2.0**. See `LICENSE` for details.
+Released under the [Apache License 2.0](LICENSE).

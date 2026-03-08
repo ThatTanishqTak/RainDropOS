@@ -64,7 +64,7 @@ void SettingsScreen::ApplySelected()
     }
     else if (label == "Exit Shell")
     {
-        m_WantsToExit = true;
+        m_WantsToQuit = true;
     }
 }
 

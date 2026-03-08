@@ -121,7 +121,7 @@ void LibraryScreen::Update(Action action)
     {
         case Action::Menu:
             m_PendingPush = std::make_unique<SettingsScreen>(m_Settings);
-            return;;
+            return;
 
         case Action::Back:
             m_WantsToExit = true;
