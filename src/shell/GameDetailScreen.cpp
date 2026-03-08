@@ -17,35 +17,40 @@ void GameDetailScreen::OnEnter()
 void GameDetailScreen::LaunchGame()
 {
     std::cout << "Launching: " << m_Game.title << "\n";
-
-    if (m_Game.isSteam)
-    {
-        // Launch via Steam URI
-        std::string cmd = "steam steam://rungameid/" + m_Game.appid + " &";
-        system(cmd.c_str());
-        
-        return;
-    }
-
-    // Native launch via fork/exec
     pid_t pid = fork();
 
     if (pid == 0)
     {
-        execvp(m_Game.executable.c_str(), nullptr);
-        std::cerr << "Failed to launch: " << m_Game.executable << "\n";
+        if (m_Game.launch == LaunchType::Steam)
+        {
+            std::string uri = "steam://rungameid/" + std::to_string(m_Game.steamAppId);
+            const char* argv[] = { "steam", uri.c_str(), nullptr };
+            // execvp signature takes char* const* — the cast is required by
+            // POSIX's historical API despite argv contents never being modified.
+            execvp("steam", const_cast<char* const*>(argv));
+
+            // Use write() instead of std::cerr — C++ iostream buffers are shared
+            // after fork() and are not async-signal-safe before _exit().
+            const char msg[] = "Failed to launch Steam (is steam in PATH?)\n";
+            write(STDERR_FILENO, msg, sizeof(msg) - 1);
+        }
+        else
+        {
+            const char* argv[] = { m_Game.nativePath.c_str(), nullptr };
+            execvp(m_Game.nativePath.c_str(), const_cast<char* const*>(argv));
+
+            const char msg[] = "Failed to exec native binary\n";
+            write(STDERR_FILENO, msg, sizeof(msg) - 1);
+        }
+
         _exit(1);
     }
-    else if (pid > 0)
+    else if (pid < 0)
     {
-        int status;
-        waitpid(pid, &status, 0);
-        std::cout << "Game exited, returning to shell\n";
-    }
-    else
-    {
+        // Still in the parent — std::cerr is safe here.
         std::cerr << "fork() failed\n";
     }
+    // Parent returns immediately — the shell UI keeps running.
 }
 
 void GameDetailScreen::Update(Action action)
@@ -65,7 +70,7 @@ void GameDetailScreen::Update(Action action)
             {
                 LaunchGame();
             }
-            else 
+            else
             {
                 m_WantsToExit = true;
             }
@@ -86,12 +91,12 @@ void GameDetailScreen::Render(Renderer& renderer)
 
     SDL_Color white = { 255, 255, 255, 255 };
     SDL_Color dimmed = { 140, 140, 150, 255 };
-    SDL_Color headerBg = { 18, 20, 40, 255 };
-    SDL_Color hintBg = { 18, 20, 40, 255 };
-    SDL_Color borderColor = { 80, 120, 220, 255 };
-    SDL_Color coverBg = { 28, 32, 58, 255 };
-    SDL_Color optionBg = { 28, 32, 58, 255 };
-    SDL_Color accent = { 80, 200, 140, 255 };
+    SDL_Color headerBg = {  18,  20,  40, 255 };
+    SDL_Color hintBg = {  18,  20,  40, 255 };
+    SDL_Color borderColor = {  80, 120, 220, 255 };
+    SDL_Color coverBg = {  28,  32,  58, 255 };
+    SDL_Color optionBg = {  28,  32,  58, 255 };
+    SDL_Color accent = {  80, 200, 140, 255 };
 
     // Header bar
     renderer.DrawRect(0, 0, 1920, 90, headerBg);
@@ -115,8 +120,9 @@ void GameDetailScreen::Render(Renderer& renderer)
     // Divider
     renderer.DrawRect(420, 175, 800, 2, borderColor);
 
-    // Executable path
-    renderer.DrawText(m_Game.executable, 420, 188, 16, dimmed);
+    // Launch URI or native path shown below the title
+    std::string launchLabel = (m_Game.launch == LaunchType::Steam) ? "steam://rungameid/" + std::to_string(m_Game.steamAppId) : m_Game.nativePath;
+    renderer.DrawText(launchLabel, 420, 188, 16, dimmed);
 
     // Options
     const char* options[OPTION_COUNT] = { "Launch", "Back" };

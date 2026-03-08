@@ -1,17 +1,17 @@
 #include "SteamScanner.h"
 #include "VdfParser.h"
+
 #include <filesystem>
 #include <iostream>
 #include <cstdlib>
 
 std::vector<GameEntry> SteamScanner::Scan()
 {
-    // Get home directory at runtime
     const char* home = std::getenv("HOME");
     if (!home)
     {
         std::cerr << "SteamScanner: HOME not set\n";
-    
+
         return {};
     }
 
@@ -46,10 +46,12 @@ std::vector<std::string> SteamScanner::FindLibraryPaths(const std::string& steam
     VdfNode root = VdfParser::ParseFile(vdfPath);
     if (root.children.empty())
     {
-        std::cerr << "SteamScanner: could not parse libraryfolders.vdf" << " (Steam may not be installed)\n";
-        return paths; // return empty — no Steam installed
+        std::cerr << "SteamScanner: could not parse libraryfolders.vdf (Steam may not be installed)\n";
+
+        return paths;
     }
 
+    // Keys are lowercased at parse time by VdfParser (see issue 5 fix).
     const VdfNode& folders = root["libraryfolders"];
     for (const auto& [key, node] : folders.children)
     {
@@ -67,6 +69,29 @@ std::vector<std::string> SteamScanner::FindLibraryPaths(const std::string& steam
     }
 
     return paths;
+}
+
+// Safe integer parse — returns std::nullopt instead of throwing on
+// malformed input. One corrupt manifest should never abort the whole scan.
+std::optional<int> SteamScanner::ParseInt(const std::string& s)
+{
+    try
+    {
+        std::size_t pos = 0;
+        int result = std::stoi(s, &pos);
+
+        // Reject strings with trailing garbage, e.g. "4abc"
+        if (pos != s.size())
+        {
+            return std::nullopt;
+        }
+
+        return result;
+    }
+    catch (const std::exception&)
+    {
+        return std::nullopt;
+    }
 }
 
 void SteamScanner::ScanLibrary(const std::string& libraryPath, std::vector<GameEntry>& out)
@@ -95,40 +120,50 @@ void SteamScanner::ScanLibrary(const std::string& libraryPath, std::vector<GameE
         }
 
         VdfNode root = VdfParser::ParseFile(entry.path().string());
-        const VdfNode& appState = root["AppState"];
+        const VdfNode& appState = root["appstate"];
 
         if (appState.children.empty())
         {
             continue;
         }
 
-        std::string stateFlags = appState["StateFlags"].value;
+        std::string stateFlags = appState["stateflags"].value;
         if (stateFlags.empty())
         {
             continue;
         }
 
-        int state = std::stoi(stateFlags);
-        if ((state & STATE_FULLY_INSTALLED) == 0)
+        auto state = ParseInt(stateFlags);
+        if (!state.has_value() || (state.value() & STATE_FULLY_INSTALLED) == 0)
+        {
+            if (!state.has_value())
+            {
+                std::cerr << "SteamScanner: invalid StateFlags value \"" << stateFlags << "\" in " << entry.path() << ", skipping\n";
+            }
+            continue;
+        }
+
+        std::string appidStr = appState["appid"].value;
+        std::string name = appState["name"].value;
+
+        if (appidStr.empty() || name.empty())
         {
             continue;
         }
 
-        std::string appid = appState["appid"].value;
-        std::string name  = appState["name"].value;
-
-        if (appid.empty() || name.empty())
+        auto appidVal = ParseInt(appidStr);
+        if (!appidVal.has_value() || appidVal.value() <= 0)
         {
+            std::cerr << "SteamScanner: invalid appid \"" << appidStr << "\" in " << entry.path() << ", skipping\n";
             continue;
         }
 
         GameEntry game;
         game.title = name;
-        game.appid = appid;
-        game.isSteam = true;
-        game.executable = "steam steam://rungameid/" + appid;
+        game.launch = LaunchType::Steam;
+        game.steamAppId = static_cast<uint32_t>(appidVal.value());
 
         out.push_back(game);
-        std::cout << "SteamScanner: found " << name << " (appid " << appid << ")\n";
+        std::cout << "SteamScanner: found " << name << " (appid " << game.steamAppId << ")\n";
     }
 }

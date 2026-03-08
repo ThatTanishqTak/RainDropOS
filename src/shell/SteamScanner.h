@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <string>
+#include <optional>
 
 class SteamScanner
 {
@@ -14,6 +15,8 @@ public:
 private:
     std::vector<std::string> FindLibraryPaths(const std::string& steamRoot);
     void ScanLibrary(const std::string& path, std::vector<GameEntry>& out);
+
+    static std::optional<int> ParseInt(const std::string& s);
 
     static constexpr int STATE_FULLY_INSTALLED = 4;
 };

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SDL2/SDL.h>
+#include <queue>
 
 enum class Action
 {
@@ -18,8 +19,9 @@ class InputManager
 {
 public:
     void ProcessEvent(const SDL_Event& event);
+    bool HasActions() const;
     Action ConsumeAction();
 
 private:
-    Action m_PendingAction = Action::None;
+    std::queue<Action> m_ActionQueue;
 };

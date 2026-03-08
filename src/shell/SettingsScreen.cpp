@@ -1,9 +1,22 @@
 #include "SettingsScreen.h"
 #include <iostream>
 
+SettingsScreen::SettingsScreen(Settings& settings) : m_Settings(settings)
+{
+
+}
+
 void SettingsScreen::OnEnter()
 {
-    m_Entries = { { "Fullscreen", "Off" }, { "Resolution", "1920x1080" }, { "VSync", "On" }, { "Exit Shell", "" }, };
+    // Populate entries from live Settings so they reflect the saved state.
+    m_Entries =
+    {
+        { "Fullscreen", m_Settings.fullscreen ? "On" : "Off" },
+        { "Resolution", std::to_string(m_Settings.resWidth) + "x" + std::to_string(m_Settings.resHeight) },
+        { "VSync", m_Settings.vsync ? "On" : "Off" },
+        { "Exit Shell", "" },
+    };
+
     m_SelectedIndex = 0;
 }
 
@@ -13,26 +26,41 @@ void SettingsScreen::ApplySelected()
 
     if (label == "Fullscreen")
     {
-        m_Entries[m_SelectedIndex].value = m_Entries[m_SelectedIndex].value == "Off" ? "On" : "Off";
+        m_Settings.fullscreen = !m_Settings.fullscreen;
+        m_Entries[m_SelectedIndex].value = m_Settings.fullscreen ? "On" : "Off";
+        m_Settings.dirty = true;
+        m_Settings.Save();
     }
     else if (label == "VSync")
     {
-        m_Entries[m_SelectedIndex].value = m_Entries[m_SelectedIndex].value == "On" ? "Off" : "On";
+        m_Settings.vsync = !m_Settings.vsync;
+        m_Entries[m_SelectedIndex].value = m_Settings.vsync ? "On" : "Off";
+        // VSync requires renderer recreation — applied on next launch.
+        std::cout << "VSync change will take effect on next launch.\n";
+        m_Settings.Save();
     }
     else if (label == "Resolution")
     {
-        if (m_Entries[m_SelectedIndex].value == "1920x1080")
+        // Cycle through common resolutions.
+        if (m_Settings.resWidth == 1920)
         {
-            m_Entries[m_SelectedIndex].value = "1280x720";
+            m_Settings.resWidth = 1280;
+            m_Settings.resHeight = 720; 
         }
-        else if (m_Entries[m_SelectedIndex].value == "1280x720")
+        else if (m_Settings.resWidth == 1280)
         {
-            m_Entries[m_SelectedIndex].value = "3840x2160";
+            m_Settings.resWidth = 3840;
+            m_Settings.resHeight = 2160;
         }
         else
         {
-            m_Entries[m_SelectedIndex].value = "1920x1080";
+            m_Settings.resWidth = 1920;
+            m_Settings.resHeight = 1080;
         }
+
+        m_Entries[m_SelectedIndex].value = std::to_string(m_Settings.resWidth) + "x" + std::to_string(m_Settings.resHeight);
+        m_Settings.dirty = true;
+        m_Settings.Save();
     }
     else if (label == "Exit Shell")
     {

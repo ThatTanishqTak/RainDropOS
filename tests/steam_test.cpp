@@ -58,7 +58,7 @@ int main()
     std::cout << "Found " << games.size() << " games\n";
     for (const auto& g : games)
     {
-        std::cout << "  " << g.title << " (appid " << g.appid << ")\n";
+        std::cout << "  " << g.title << " (appid " << g.steamAppId << ")\n";
     }
 
     if (games.size() == 1 && games[0].title == "Team Fortress 2")

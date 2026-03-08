@@ -11,12 +11,15 @@ struct VdfNode
 
     bool IsLeaf() const { return children.empty(); }
 
-    // Convenience accessor — returns empty node if key not found
     const VdfNode& operator[](const std::string& key) const
     {
-        static VdfNode empty;
+        static const VdfNode empty;
         auto it = children.find(key);
-        if (it == children.end()) { return empty; }
+        if (it == children.end())
+        {
+            return empty;
+        }
+    
         return it->second;
     }
 };

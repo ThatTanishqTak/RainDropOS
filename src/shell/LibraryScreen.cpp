@@ -8,27 +8,55 @@
 #include <iostream>
 #include <algorithm>
 
+LibraryScreen::LibraryScreen(Settings& settings) : m_Settings(settings)
+{
+
+}
+
 void LibraryScreen::OnEnter()
 {
     LoadLibrary();
     m_SelectedIndex = 0;
 }
 
+void LibraryScreen::OnResume(std::any result)
+{
+    // If returning from SettingsScreen, the updated Settings have already
+    // been mutated in-place and saved. Nothing more to do here — Application
+    // will spot the dirty flag and apply SDL changes on the next frame.
+}
+
 void LibraryScreen::LoadLibrary()
 {
     m_Games.clear();
+    m_LastError.clear();
 
-    // Try current directory first, then home directory
-    std::vector<std::string> searchPaths = { "library.json", std::string(std::getenv("HOME")) + "/raindropos/library.json" };
+    // Build the list of candidate paths. The home-directory path is only
+    // added when HOME is actually set — constructing std::string from a
+    // null pointer is undefined behaviour.
+    std::vector<std::string> searchPaths = { "library.json" };
+
+    if (const char* home = std::getenv("HOME"))
+    {
+        searchPaths.push_back(std::string(home) + "/raindropos/library.json");
+    }
+    else
+    {
+        std::cerr << "LibraryScreen: HOME is not set, skipping home-directory search path\n";
+    }
+
     std::ifstream file;
 
     for (const auto& path : searchPaths)
     {
+        // clear() is required before re-opening a stream that previously
+        // failed — without it the failbit stays set and the new open is ignored.
+        file.clear();
         file.open(path);
         if (file.is_open())
         {
             std::cout << "Loading library from: " << path << "\n";
-
+            
             break;
         }
     }
@@ -43,8 +71,8 @@ void LibraryScreen::LoadLibrary()
             {
                 GameEntry game;
                 game.title = entry["title"].get<std::string>();
-                game.executable = entry["executable"].get<std::string>();
-                game.isSteam = false;
+                game.launch = LaunchType::Native;
+                game.nativePath = entry["executable"].get<std::string>();
                 
                 m_Games.push_back(game);
             }
@@ -53,12 +81,14 @@ void LibraryScreen::LoadLibrary()
         }
         catch (const nlohmann::json::exception& e)
         {
-            std::cerr << "Failed to parse library.json: " << e.what() << "\n";
+            m_LastError = std::string("library.json parse error: ") + e.what();
+            std::cerr << m_LastError << "\n";
         }
     }
     else
     {
-        std::cerr << "Could not find library.json\n";
+        // Not an error worth surfacing — library.json is optional if Steam games exist.
+        std::cout << "No library.json found, continuing with Steam scan\n";
     }
 
     // Scan for Steam games
@@ -75,11 +105,33 @@ void LibraryScreen::LoadLibrary()
             return a.title < b.title;
         });
 
+    if (m_Games.empty() && m_LastError.empty())
+    {
+        m_LastError = "No games found. Add entries to library.json or install Steam games.";
+    }
+
     std::cout << "Total games in library: " << m_Games.size() << "\n";
 }
 
 void LibraryScreen::Update(Action action)
 {
+    // Back and Menu must always be reachable — even with an empty library
+    // the user needs a way to reach settings or exit the shell.
+    switch (action)
+    {
+        case Action::Menu:
+            m_PendingPush = std::make_unique<SettingsScreen>(m_Settings);
+            return;;
+
+        case Action::Back:
+            m_WantsToExit = true;
+            return;
+
+        default:
+            break;
+    }
+
+    // Everything below requires at least one game to act on.
     int count = static_cast<int>(m_Games.size());
     if (count == 0)
     {
@@ -111,18 +163,7 @@ void LibraryScreen::Update(Action action)
             break;
 
         case Action::Confirm:
-            if (!m_Games.empty())
-            {
-                m_PendingPush = std::make_unique<GameDetailScreen>(m_Games[m_SelectedIndex]);
-            }
-            break;
-
-        case Action::Menu:
-            m_PendingPush = std::make_unique<SettingsScreen>();
-            break;
-
-        case Action::Back:
-            m_WantsToExit = true;
+            m_PendingPush = std::make_unique<GameDetailScreen>(m_Games[m_SelectedIndex]);
             break;
 
         default:
@@ -184,7 +225,7 @@ void LibraryScreen::Render(Renderer& renderer)
             renderer.DrawRectOutline(x, y, TILE_W, TILE_H, 3, borderColor);
         }
 
-        std::string label = m_Games[i].title + (m_Games[i].isSteam ? " [S]" : "");
+        std::string label = m_Games[i].title + (m_Games[i].launch == LaunchType::Steam ? " [S]" : "");
         renderer.DrawText(label, x, y + TILE_H + 6, 16, isSelected ? white : dimmed);
     }
 

@@ -2,6 +2,7 @@
 
 #include "Screen.h"
 #include "GameEntry.h"
+#include "Settings.h"
 
 #include <vector>
 #include <string>
@@ -9,7 +10,10 @@
 class LibraryScreen : public Screen
 {
 public:
+    explicit LibraryScreen(Settings& settings); 
+
     void OnEnter() override;
+    void OnResume(std::any result = {}) override;
     void Update(Action action) override;
     void Render(Renderer& renderer) override;
 
@@ -17,6 +21,7 @@ private:
     void LoadLibrary();
 
 private:
+    Settings& m_Settings;
     std::vector<GameEntry> m_Games;
     int m_SelectedIndex = 0;
     std::string m_LastError;

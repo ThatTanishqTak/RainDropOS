@@ -1,11 +1,19 @@
 #pragma once
 
 #include <string>
+#include <cstdint>
+
+enum class LaunchType
+{
+    Native,
+    Steam
+};
 
 struct GameEntry
 {
     std::string title;
-    std::string executable;
-    std::string appid;
-    bool isSteam = false;
+    LaunchType  launch = LaunchType::Native;
+
+    std::string nativePath;
+    uint32_t steamAppId = 0; 
 };

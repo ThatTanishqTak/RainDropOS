@@ -1,8 +1,10 @@
 #include "VdfParser.h"
+
 #include <fstream>
 #include <sstream>
 #include <iostream>
 #include <stdexcept>
+#include <algorithm>
 
 VdfNode VdfParser::ParseFile(const std::string& path)
 {
@@ -167,6 +169,7 @@ VdfNode VdfParser::BuildTree(const std::vector<Token>& tokens, size_t& pos)
         }
 
         std::string key = tok.value;
+        std::transform(key.begin(), key.end(), key.begin(), ::tolower);
         pos++;
 
         if (pos >= tokens.size())

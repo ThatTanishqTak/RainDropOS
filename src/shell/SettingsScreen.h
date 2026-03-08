@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Screen.h"
+#include "Settings.h"
 
 #include <vector>
 #include <string>
@@ -14,6 +15,8 @@ struct SettingsEntry
 class SettingsScreen : public Screen
 {
 public:
+    explicit SettingsScreen(Settings& settings);
+
     void OnEnter() override;
     void Update(Action action) override;
     void Render(Renderer& renderer) override;
@@ -21,10 +24,11 @@ public:
 private:
     void ApplySelected();
 
-    std::vector<SettingsEntry> m_Entries;
+    Settings& m_Settings;
+    std::vector<SettingsEntry>  m_Entries;
     int m_SelectedIndex = 0;
 
     static constexpr int START_X = 80;
     static constexpr int START_Y = 160;
-    static constexpr int ROW_H = 60;
+    static constexpr int ROW_H   = 60;
 };

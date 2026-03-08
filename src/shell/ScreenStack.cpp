@@ -11,11 +11,13 @@ void ScreenStack::Pop()
     if (!m_Screens.empty())
     {
         m_Screens.back()->OnExit();
+
+        std::any result = m_Screens.back()->TakeResult();
         m_Screens.pop_back();
 
         if (!m_Screens.empty())
         {
-            m_Screens.back()->OnEnter();
+            m_Screens.back()->OnResume(std::move(result));
         }
     }
 }
@@ -30,14 +32,22 @@ void ScreenStack::Update(Action action)
     auto& top = m_Screens.back();
     top->Update(action);
 
-    if (top->HasPendingPush())
+    const bool wantsQuit = top->WantsToQuit();
+    const bool wantsExit = top->WantsToExit();
+    std::unique_ptr<Screen> pending = top->HasPendingPush() ? top->TakePendingPush() : nullptr;
+
+    top->ResetFlags();
+
+    // Priority: push > quit > exit
+    if (pending)
     {
-        Push(top->TakePendingPush());
-
-        return;
+        Push(std::move(pending));
     }
-
-    if (top->WantsToExit())
+    else if (wantsQuit)
+    {
+        m_WantsToQuit = true;
+    }
+    else if (wantsExit)
     {
         Pop();
     }

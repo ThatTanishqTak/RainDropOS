@@ -1,2 +1,2 @@
 cd ..
-cmake --build build && ./build/src/shell/raindrop-shell
+rm -rf build && cmake -B build -S . && cmake --build build && ./build/src/shell/raindrop-shell
