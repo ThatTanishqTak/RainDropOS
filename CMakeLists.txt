@@ -43,3 +43,9 @@ add_executable(telemetry-test
     src/daemons/TelemetryCollector.cpp
 )
 target_include_directories(telemetry-test PRIVATE src/daemons include)
+
+add_executable(profile-test
+    tests/profile_test.cpp
+    src/daemons/ProfileManager.cpp
+)
+target_include_directories(profile-test PRIVATE src/daemons include)
