@@ -71,8 +71,6 @@ std::vector<std::string> SteamScanner::FindLibraryPaths(const std::string& steam
     return paths;
 }
 
-// Safe integer parse — returns std::nullopt instead of throwing on
-// malformed input. One corrupt manifest should never abort the whole scan.
 std::optional<int> SteamScanner::ParseInt(const std::string& s)
 {
     try

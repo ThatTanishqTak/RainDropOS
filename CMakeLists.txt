@@ -21,3 +21,19 @@ add_executable(steam-test
     src/shell/VdfParser.cpp
 )
 target_include_directories(steam-test PRIVATE src/shell)
+
+add_executable(ipc-test
+    tests/ipc_test.cpp
+)
+target_include_directories(ipc-test PRIVATE include)
+
+add_executable(ipc-comms-test
+    tests/ipc_comms_test.cpp
+    src/daemons/IpcServer.cpp
+    src/shell/IpcClient.cpp
+)
+target_include_directories(ipc-comms-test PRIVATE
+    src/daemons
+    src/shell
+    include
+)
