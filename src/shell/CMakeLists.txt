@@ -11,9 +11,13 @@ add_executable(raindrop-shell
     Renderer.cpp
     VdfParser.cpp
     SteamScanner.cpp
+    IpcClient.cpp
 )
 
-target_include_directories(raindrop-shell PRIVATE ${SDL2_INCLUDE_DIRS})
+target_include_directories(raindrop-shell PRIVATE
+    ${SDL2_INCLUDE_DIRS}
+    ${CMAKE_SOURCE_DIR}/include
+)
 target_link_libraries(raindrop-shell PRIVATE
     ${SDL2_LIBRARIES}
     SDL2_ttf

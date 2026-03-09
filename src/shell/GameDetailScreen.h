@@ -2,6 +2,7 @@
 
 #include "Screen.h"
 #include "GameEntry.h"
+#include "IpcClient.h"
 
 enum class DetailAction
 {
@@ -22,6 +23,7 @@ private:
     void LaunchGame();
 
     GameEntry m_Game;
+    IpcClient m_Ipc;
     int m_SelectedIndex = 0;
 
     static constexpr int OPTION_COUNT = 2;

@@ -17,6 +17,16 @@ void GameDetailScreen::OnEnter()
 void GameDetailScreen::LaunchGame()
 {
     std::cout << "Launching: " << m_Game.title << "\n";
+
+    // Notify daemon
+    if (m_Ipc.IsAvailable())
+    {
+        IpcMessage msg;
+        msg.type  = MessageType::GameStart;
+        msg.appid = std::to_string(m_Game.steamAppId);
+        m_Ipc.Send(msg);
+    }
+
     pid_t pid = fork();
 
     if (pid == 0)
@@ -25,12 +35,8 @@ void GameDetailScreen::LaunchGame()
         {
             std::string uri = "steam://rungameid/" + std::to_string(m_Game.steamAppId);
             const char* argv[] = { "steam", uri.c_str(), nullptr };
-            // execvp signature takes char* const* — the cast is required by
-            // POSIX's historical API despite argv contents never being modified.
             execvp("steam", const_cast<char* const*>(argv));
 
-            // Use write() instead of std::cerr — C++ iostream buffers are shared
-            // after fork() and are not async-signal-safe before _exit().
             const char msg[] = "Failed to launch Steam (is steam in PATH?)\n";
             write(STDERR_FILENO, msg, sizeof(msg) - 1);
         }
@@ -45,12 +51,24 @@ void GameDetailScreen::LaunchGame()
 
         _exit(1);
     }
-    else if (pid < 0)
+    else if (pid > 0)
     {
-        // Still in the parent — std::cerr is safe here.
+        // Wait for the game to exit
+        waitpid(pid, nullptr, 0);
+
+        // Notify daemon the game has stopped
+        if (m_Ipc.IsAvailable())
+        {
+            IpcMessage msg;
+            msg.type  = MessageType::GameStop;
+            msg.appid = (m_Game.launch == LaunchType::Steam) ? std::to_string(m_Game.steamAppId) : m_Game.title;
+            m_Ipc.Send(msg);
+        }
+    }
+    else
+    {
         std::cerr << "fork() failed\n";
     }
-    // Parent returns immediately — the shell UI keeps running.
 }
 
 void GameDetailScreen::Update(Action action)
