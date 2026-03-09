@@ -49,3 +49,12 @@ add_executable(profile-test
     src/daemons/ProfileManager.cpp
 )
 target_include_directories(profile-test PRIVATE src/daemons include)
+
+add_executable(raindrop-daemon
+    src/daemons/main.cpp
+    src/daemons/Daemon.cpp
+    src/daemons/IpcServer.cpp
+    src/daemons/TelemetryCollector.cpp
+    src/daemons/ProfileManager.cpp
+)
+target_include_directories(raindrop-daemon PRIVATE src/daemons include)
