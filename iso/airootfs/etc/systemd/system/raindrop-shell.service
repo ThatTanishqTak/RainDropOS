@@ -1,0 +1,14 @@
+[Unit]
+Description=RainDrop Shell
+After=graphical.target raindrop-daemon.service
+Wants=raindrop-daemon.service
+
+[Service]
+User=raindrop
+WorkingDirectory=/home/raindrop
+ExecStart=/usr/bin/raindrop-shell
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=graphical.target
