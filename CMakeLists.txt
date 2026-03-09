@@ -37,3 +37,9 @@ target_include_directories(ipc-comms-test PRIVATE
     src/shell
     include
 )
+
+add_executable(telemetry-test
+    tests/telemetry_test.cpp
+    src/daemons/TelemetryCollector.cpp
+)
+target_include_directories(telemetry-test PRIVATE src/daemons include)
